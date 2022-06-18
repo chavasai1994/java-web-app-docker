@@ -1,0 +1,27 @@
+node{
+    stage("git clone"){
+        
+        git url:"https://github.com/chavasai1994/java-web-app-docker.git" , branch: "master"
+        
+    }
+    stage("mvn clean package"){
+     def mavenHome= tool name: "maven" ,type: "maven"
+     
+     sh "${mavenHome}/bin/mvn clean package"
+    }
+    stage("Build Docker Image")
+    sh "docker build -t chavasaidevops/dockerwithjenkins:1 ."
+    
+    stage("docker login and push"){
+
+        sh "docker login -u chavasaidevops -p kanna@1234"
+    
+        sh "docker push chavasaidevops/dockerwithjenkins:1"
+    }
+    stage("deploy application as docker container"){
+        
+        sshagent(['docker_dev_server_id']) {
+        sh "ssh -o StrictHostKeyChecking=no ubuntu@172.31.6.194 docker run -d --name jenwithdoc -p 8080:8080 chavasaidevops/dockerwithjenkins:1"
+    }
+   }
+}
